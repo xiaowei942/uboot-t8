@@ -35,6 +35,8 @@
 #include <malloc.h>		/* for free() prototype */
 #endif
 
+#include <fastboot.h>
+
 #ifdef CONFIG_SYS_HUSH_PARSER
 #include <hush.h>
 #endif
@@ -319,6 +321,11 @@ void main_loop (void)
 #if defined(CONFIG_HUSH_INIT_VAR)
 	hush_init_var ();
 #endif
+
+#ifdef CONFIG_FASTBOOT
+    if (fastboot_preboot())
+        run_command("fastboot", 0);
+#endif	
 
 #ifdef CONFIG_PREBOOT
 	if ((p = getenv ("preboot")) != NULL) {

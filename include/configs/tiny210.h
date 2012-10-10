@@ -89,7 +89,7 @@
 #define CONFIG_CMDLINE_EDITING
 
 /* MACH_TYPE_MINI210 macro will be removed once added to mach-types */
-#define MACH_TYPE_TINY210		2456
+#define MACH_TYPE_TINY210		3466
 #define CONFIG_MACH_TYPE		MACH_TYPE_TINY210
 
 /* Size of malloc() pool */
@@ -131,7 +131,7 @@
 #define CONFIG_SYS_LONGHELP             /* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER          /* use "hush" command parser    */
 #define CONFIG_SYS_PROMPT_HUSH_PS2      "> "
-#define CONFIG_SYS_PROMPT              "[FriendlyLEG-TINY210]# "
+#define CONFIG_SYS_PROMPT              "[ZZRD]# "
 #define CONFIG_SYS_CBSIZE               256     /* Console I/O Buffer Size*/
 #define CONFIG_SYS_PBSIZE               384     /* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS              16      /* max number of command args */
@@ -168,6 +168,25 @@
 #define PHYS_SDRAM_2		(MEMORY_BASE_ADDRESS + 0x20000000) /* SDRAM Bank #2 */
 #define PHYS_SDRAM_2_SIZE	SDRAM_BANK_SIZE
 #endif
+
+#define CONFIG_S3C_USBD
+#define USBD_DOWN_ADDR 0x30000000
+/************  Fastboot  ************/
+#define CONFIG_FASTBOOT 1
+
+/* Fastboot variables */
+#define CFG_FASTBOOT_TRANSFER_BUFFER		(0x30000000)
+#define CFG_FASTBOOT_TRANSFER_BUFFER_SIZE	(0x8000000) /* 128MB */
+#define CFG_FASTBOOT_ADDR_KERNEL		(0xC0008000)
+#define CFG_FASTBOOT_ADDR_RAMDISK		(0x30A00000)
+#define CFG_FASTBOOT_PAGESIZE  (2048)	// Page size of booting device
+#define CFG_FASTBOOT_SDMMC_BLOCKSIZE	 (512)	// Block size of sdmmc
+
+/* Just one BSP type should be defined. */
+/* #define CFG_FASTBOOT_ONENANDBSP */
+#define CFG_FASTBOOT_NANDBSP
+/* #define CFG_FASTBOOT_SDMMCBSP */
+/************  Fastboot  *************/
 
 #if 0
 //#define CONFIG_CLK_667_166_166_133
@@ -404,10 +423,19 @@
 
 /***Modified by lk ***/
 #define CONFIG_ETHADDR		00:40:5c:26:0a:5b
-#define CONFIG_NETMASK          255.255.255.0
-#define CONFIG_IPADDR		192.168.186.13
-#define CONFIG_SERVERIP		192.168.186.13
-#define CONFIG_GATEWAYIP	192.168.0.1
+#define CONFIG_NETMASK          255.255.0.0
+#define CONFIG_IPADDR		10.0.1.111
+#define CONFIG_SERVERIP		10.0.1.119
+#define CONFIG_GATEWAYIP	10.0.1.1
+
+#if 1
+#define CONFIG_BOOTARGS		"console=ttySAC0,115200 mem=512M"
+#define CONFIG_BOOTCOMMAND	"nand read C0008000 600000 400000; nand read 30A00000 B00000 180000; bootm C0008000 30A00000"
+#else
+#define CONFIG_BOOTCOMMAND	"tftp 30000000 uImage; bootm 30000000"
+#define CONFIG_BOOTARGS		"root=/dev/nfs nfsroot=10.0.1.119:/opt/tftpboot/nfsroot rw noinitrd init=/linuxrc ip=10.0.1.111:10.0.1.119:10.0.1.119:255.255.255.0:avantech:eth0:off console=ttySAC0,115200"
+#endif
+
 /*   For nand driver   */
 #define CONFIG_CMD_NAND
 #if defined(CONFIG_CMD_NAND)
@@ -428,7 +456,7 @@
 /* FLASH and environment organization */
 #define CONFIG_SYS_NO_FLASH             1
 #undef CONFIG_CMD_IMLS
-#define CONFIG_IDENT_STRING     " for FriendlyLEG-TINY210"
+#define CONFIG_IDENT_STRING     " for ZZRD S5PC210"
 #define CONFIG_DOS_PARTITION            1
 
 /*NAND_BOOT & MMCSD_BOOT  by lk  */
@@ -437,7 +465,7 @@
 #define CONFIG_ENV_SIZE         0x4000  /* 16KB */
 #define RESERVE_BLOCK_SIZE              (2048)
 #define BL1_SIZE                        (8 << 10) /*8 K reserved for BL1*/
-#define CONFIG_ENV_OFFSET               0x40000
+#define CONFIG_ENV_OFFSET               0x80000
 #define CFG_NAND_HWECC
 #define CONFIG_NAND_BL1_8BIT_ECC
 #define CONFIG_8BIT_HW_ECC_SLC      1

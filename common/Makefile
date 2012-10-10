@@ -153,6 +153,10 @@ COBJS-$(CONFIG_CMD_UBI) += cmd_ubi.o
 COBJS-$(CONFIG_CMD_UBIFS) += cmd_ubifs.o
 COBJS-$(CONFIG_CMD_UNIVERSE) += cmd_universe.o
 COBJS-$(CONFIG_CMD_UNZIP) += cmd_unzip.o
+
+COBJS-$(CONFIG_S3C_USBD) += cmd_usbd.o
+COBJS-$(CONFIG_FASTBOOT) += cmd_fastboot.o
+
 ifdef CONFIG_CMD_USB
 COBJS-y += cmd_usb.o
 COBJS-y += usb.o
