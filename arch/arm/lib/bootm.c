@@ -93,19 +93,38 @@ static void announce_and_cleanup(void)
 	cleanup_before_linux();
 }
 
-int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
+void do_bootm_linux(int flag, int argc, char *argv[],
+		     bootm_headers_t *images)
 {
+	ulong	initrd_start, initrd_end;
+	ulong	ep = 0;
 	bd_t	*bd = gd->bd;
 	char	*s;
 	int	machid = bd->bi_arch_number;
-	void	(*kernel_entry)(int zero, int arch, uint params);
+	void	(*theKernel)(int zero, int arch, uint params);
+	int	ret;
 
 #ifdef CONFIG_CMDLINE_TAG
 	char *commandline = getenv ("bootargs");
 #endif
 
-	if ((flag != 0) && (flag != BOOTM_STATE_OS_GO))
-		return 1;
+	/* find kernel entry point */
+	if (images->legacy_hdr_valid) {
+		ep = image_get_ep (&images->legacy_hdr_os_copy);
+#if defined(CONFIG_FIT)
+	} else if (images->fit_uname_os) {
+		ret = fit_image_get_entry (images->fit_hdr_os,
+					images->fit_noffset_os, &ep);
+		if (ret) {
+			puts ("Can't get entry point property!\n");
+			goto error;
+		}
+#endif
+	} else {
+		puts ("Could not find kernel entry point!\n");
+		goto error;
+	}
+	theKernel = (void (*)(int, int, uint))ep;
 
 	s = getenv ("machid");
 	if (s) {
@@ -113,23 +132,24 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 		printf ("Using machid 0x%x from environment\n", machid);
 	}
 
+	ret = boot_get_ramdisk (argc, argv, images, IH_ARCH_ARM,
+			&initrd_start, &initrd_end);
+	if (ret)
+		goto error;
+
 	show_boot_progress (15);
 
-#ifdef CONFIG_OF_LIBFDT
-	if (images->ft_len)
-		return bootm_linux_fdt(machid, images);
-#endif
-
-	kernel_entry = (void (*)(int, int, uint))images->ep;
-
 	debug ("## Transferring control to Linux (at address %08lx) ...\n",
-	       (ulong) kernel_entry);
+	       (ulong) theKernel);
 
 #if defined (CONFIG_SETUP_MEMORY_TAGS) || \
     defined (CONFIG_CMDLINE_TAG) || \
     defined (CONFIG_INITRD_TAG) || \
     defined (CONFIG_SERIAL_TAG) || \
-    defined (CONFIG_REVISION_TAG)
+    defined (CONFIG_REVISION_TAG) || \
+    defined (CONFIG_LCD) || \
+    defined (CONFIG_VFD) || \
+    defined (CONFIG_MTDPARTITION)
 	setup_start_tag (bd);
 #ifdef CONFIG_SERIAL_TAG
 	setup_serial_tag (&params);
@@ -144,18 +164,39 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 	setup_commandline_tag (bd, commandline);
 #endif
 #ifdef CONFIG_INITRD_TAG
-	if (images->rd_start && images->rd_end)
-		setup_initrd_tag (bd, images->rd_start, images->rd_end);
+	if (initrd_start && initrd_end)
+		setup_initrd_tag (bd, initrd_start, initrd_end);
 #endif
-	setup_end_tag(bd);
+#if defined (CONFIG_VFD) || defined (CONFIG_LCD)
+	setup_videolfb_tag ((gd_t *) gd);
 #endif
 
-	announce_and_cleanup();
+#ifdef CONFIG_MTDPARTITION
+	setup_mtdpartition_tag();
+#endif
 
-	kernel_entry(0, machid, bd->bi_boot_params);
+	setup_end_tag (bd);
+#endif
+
+	/* we assume that the kernel is in place */
+	printf ("\nStarting kernel ...\n\n");
+
+#ifdef CONFIG_USB_DEVICE
+	{
+		extern void udc_disconnect (void);
+		udc_disconnect ();
+	}
+#endif
+
+	cleanup_before_linux ();
+
+	theKernel (0, machid, bd->bi_boot_params);
 	/* does not return */
+	return;
 
-	return 1;
+error:
+	//do_reset (cmdtp, flag, argc, argv);
+	return;
 }
 
 #if defined(CONFIG_OF_LIBFDT)

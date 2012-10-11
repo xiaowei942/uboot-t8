@@ -588,42 +588,156 @@ int do_bootm_subcommand (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv
 
 int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
+	image_header_t	*hdr;
+	ulong		addr;
 	ulong		iflag;
-	ulong		load_end = 0;
-	int		ret;
-	boot_os_fn	*boot_fn;
-#ifdef CONFIG_NEEDS_MANUAL_RELOC
-	static int relocated = 0;
+	const char	*type_name;
+	uint		unc_len = CONFIG_SYS_BOOTM_LEN;
+	uint8_t		comp, type, os;
 
-	/* relocate boot function table */
-	if (!relocated) {
-		int i;
-		for (i = 0; i < ARRAY_SIZE(boot_os); i++)
-			if (boot_os[i] != NULL)
-				boot_os[i] += gd->reloc_off;
-		relocated = 1;
+	void		*os_hdr;
+	ulong		os_data, os_len;
+	ulong		image_start, image_end;
+	ulong		load_start, load_end;
+	ulong		mem_start;
+	phys_size_t	mem_size;
+
+	struct lmb lmb;
+
+#if defined(CONFIG_SECURE_BOOT)
+	int rv;
+#endif
+
+#if defined(CONFIG_SECURE_BOOT)
+	rv = Check_Signature( (SecureBoot_CTX *)SECURE_BOOT_CONTEXT_ADDR,
+                                (unsigned char*)CONFIG_SECURE_KERNEL_BASE,
+                                CONFIG_SECURE_KERNEL_SIZE-128,
+                                (unsigned char*)(CONFIG_SECURE_KERNEL_BASE+CONFIG_SECURE_KERNEL_SIZE-128),
+                                128 );
+        if(rv != SB_OK) {
+                printf("Kernel Integrity check fail\nSystem Halt....");
+                while(1);
+        }
+        printf("Kernel Integirty check success.\n");
+
+	rv = Check_Signature( (SecureBoot_CTX *)SECURE_BOOT_CONTEXT_ADDR,
+                                (unsigned char*)CONFIG_SECURE_ROOTFS_BASE,
+                                CONFIG_SECURE_ROOTFS_SIZE-128,
+                                (unsigned char*)(CONFIG_SECURE_ROOTFS_BASE+CONFIG_SECURE_ROOTFS_SIZE-128),
+                                128 );
+	if(rv != SB_OK) {
+                printf("rootfs Integrity check fail\nSystem Halt....");
+                while(1);
+        }
+
+        printf("rootfs Integirty check success.\n");
+
+#endif
+	
+	memset ((void *)&images, 0, sizeof (images));
+	images.verify = getenv_yesno ("verify");
+//	images.lmb = &lmb;
+	memcpy (&images.lmb, &lmb, sizeof(struct lmb));
+
+	lmb_init(&lmb);
+
+	mem_start = getenv_bootm_low();
+	mem_size = getenv_bootm_size();
+
+	lmb_add(&lmb, (phys_addr_t)mem_start, mem_size);
+
+	board_lmb_reserve(&lmb);
+
+#ifdef CONFIG_ZIMAGE_BOOT
+#define LINUX_ZIMAGE_MAGIC	0x016f2818
+	/* find out kernel image address */
+	if (argc < 2) {
+		addr = load_addr;
+		debug ("*  kernel: default image load address = 0x%08lx\n",
+				load_addr);
+	} else {
+		addr = simple_strtoul(argv[1], NULL, 16);
+		debug ("*  kernel: cmdline image address = 0x%08lx\n", img_addr);
+	}
+
+
+	if (*(ulong *)(addr + 9*4) == LINUX_ZIMAGE_MAGIC) {
+		printf("Boot with zImage\n");
+		addr = virt_to_phys(addr);
+		hdr = (image_header_t *)addr;
+		hdr->ih_os = IH_OS_LINUX;
+		hdr->ih_ep = ntohl(addr);
+
+		memmove (&images.legacy_hdr_os_copy, hdr, sizeof(image_header_t));
+
+		/* save pointer to image header */
+		images.legacy_hdr_os = hdr;
+
+		images.legacy_hdr_valid = 1;
+
+		goto after_header_check;
 	}
 #endif
 
-	/* determine if we have a sub command */
-	if (argc > 1) {
-		char *endp;
-
-		simple_strtoul(argv[1], &endp, 16);
-		/* endp pointing to NULL means that argv[1] was just a
-		 * valid number, pass it along to the normal bootm processing
-		 *
-		 * If endp is ':' or '#' assume a FIT identifier so pass
-		 * along for normal processing.
-		 *
-		 * Right now we assume the first arg should never be '-'
-		 */
-		if ((*endp != 0) && (*endp != ':') && (*endp != '#'))
-			return do_bootm_subcommand(cmdtp, flag, argc, argv);
+	/* get kernel image header, start address and length */
+	os_hdr = boot_get_kernel (cmdtp, flag, argc, argv,
+			&images, &os_data, &os_len);
+	if (os_len == 0) {
+		puts ("ERROR: can't get kernel image!\n");
+		return 1;
 	}
 
-	if (bootm_start(cmdtp, flag, argc, argv))
+	/* get image parameters */
+	switch (genimg_get_format (os_hdr)) {
+	case IMAGE_FORMAT_LEGACY:
+		type = image_get_type (os_hdr);
+		comp = image_get_comp (os_hdr);
+		os = image_get_os (os_hdr);
+
+		image_end = image_get_image_end (os_hdr);
+		load_start = image_get_load (os_hdr);
+		break;
+#if defined(CONFIG_FIT)
+	case IMAGE_FORMAT_FIT:
+		if (fit_image_get_type (images.fit_hdr_os,
+					images.fit_noffset_os, &type)) {
+			puts ("Can't get image type!\n");
+			show_boot_progress (-109);
+			return 1;
+		}
+
+		if (fit_image_get_comp (images.fit_hdr_os,
+					images.fit_noffset_os, &comp)) {
+			puts ("Can't get image compression!\n");
+			show_boot_progress (-110);
+			return 1;
+		}
+
+		if (fit_image_get_os (images.fit_hdr_os,
+					images.fit_noffset_os, &os)) {
+			puts ("Can't get image OS!\n");
+			show_boot_progress (-111);
+			return 1;
+		}
+
+		image_end = fit_get_end (images.fit_hdr_os);
+
+		if (fit_image_get_load (images.fit_hdr_os, images.fit_noffset_os,
+					&load_start)) {
+			puts ("Can't get image load address!\n");
+			show_boot_progress (-112);
+			return 1;
+		}
+		break;
+#endif
+	default:
+		puts ("ERROR: unknown image format type!\n");
 		return 1;
+	}
+
+	image_start = (ulong)os_hdr;
+	load_end = 0;
+	type_name = genimg_get_type_name (type);
 
 	/*
 	 * We have reached the point of no return: we are going to
@@ -645,68 +759,148 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	usb_stop();
 #endif
 
-	ret = bootm_load_os(images.os, &load_end, 1);
 
-	if (ret < 0) {
-		if (ret == BOOTM_ERR_RESET)
+#ifdef CONFIG_AMIGAONEG3SE
+	/*
+	 * We've possible left the caches enabled during
+	 * bios emulation, so turn them off again
+	 */
+	icache_disable();
+	invalidate_l1_instruction_cache();
+	flush_data_cache();
+	dcache_disable();
+#endif
+
+	switch (comp) {
+	case IH_COMP_NONE:
+		if (load_start == (ulong)os_hdr) {
+			printf ("   XIP %s ... ", type_name);
+		} else {
+			printf ("   Loading %s ... ", type_name);
+
+			memmove_wd ((void *)load_start,
+				   (void *)os_data, os_len, CHUNKSZ);
+		}
+		load_end = load_start + os_len;
+		puts("OK\n");
+		break;
+	case IH_COMP_GZIP:
+		printf ("   Uncompressing %s ... ", type_name);
+		if (gunzip ((void *)load_start, unc_len,
+					(uchar *)os_data, &os_len) != 0) {
+			puts ("GUNZIP: uncompress or overwrite error "
+				"- must RESET board to recover\n");
+			show_boot_progress (-6);
 			do_reset (cmdtp, flag, argc, argv);
-		if (ret == BOOTM_ERR_OVERLAP) {
-			if (images.legacy_hdr_valid) {
-				if (image_get_type (&images.legacy_hdr_os_copy) == IH_TYPE_MULTI)
-					puts ("WARNING: legacy format multi component "
-						"image overwritten\n");
-			} else {
-				puts ("ERROR: new format image overwritten - "
-					"must RESET the board to recover\n");
-				show_boot_progress (-113);
-				do_reset (cmdtp, flag, argc, argv);
-			}
 		}
-		if (ret == BOOTM_ERR_UNIMPLEMENTED) {
-			if (iflag)
-				enable_interrupts();
-			show_boot_progress (-7);
-			return 1;
+
+		load_end = load_start + os_len;
+		break;
+#ifdef CONFIG_BZIP2
+	case IH_COMP_BZIP2:
+		printf ("   Uncompressing %s ... ", type_name);
+		/*
+		 * If we've got less than 4 MB of malloc() space,
+		 * use slower decompression algorithm which requires
+		 * at most 2300 KB of memory.
+		 */
+		int i = BZ2_bzBuffToBuffDecompress ((char*)load_start,
+					&unc_len, (char *)os_data, os_len,
+					CFG_MALLOC_LEN < (4096 * 1024), 0);
+		if (i != BZ_OK) {
+			printf ("BUNZIP2: uncompress or overwrite error %d "
+				"- must RESET board to recover\n", i);
+			show_boot_progress (-6);
+			do_reset (cmdtp, flag, argc, argv);
 		}
-	}
 
-	lmb_reserve(&images.lmb, images.os.load, (load_end - images.os.load));
-
-	if (images.os.type == IH_TYPE_STANDALONE) {
+		load_end = load_start + unc_len;
+		break;
+#endif /* CONFIG_BZIP2 */
+	default:
 		if (iflag)
 			enable_interrupts();
-		/* This may return when 'autostart' is 'no' */
-		bootm_start_standalone(iflag, argc, argv);
-		return 0;
+		printf ("Unimplemented compression type %d\n", comp);
+		show_boot_progress (-7);
+		return 1;
+	}
+	puts ("OK\n");
+	debug ("   kernel loaded at 0x%08lx, end = 0x%08lx\n", load_start, load_end);
+	show_boot_progress (7);
+
+	if ((load_start < image_end) && (load_end > image_start)) {
+		debug ("image_start = 0x%lX, image_end = 0x%lx\n", image_start, image_end);
+		debug ("load_start = 0x%lx, load_end = 0x%lx\n", load_start, load_end);
+
+		if (images.legacy_hdr_valid) {
+			if (image_get_type (&images.legacy_hdr_os_copy) == IH_TYPE_MULTI)
+				puts ("WARNING: legacy format multi component "
+					"image overwritten\n");
+		} else {
+			puts ("ERROR: new format image overwritten - "
+				"must RESET the board to recover\n");
+			show_boot_progress (-113);
+			do_reset (cmdtp, flag, argc, argv);
+		}
 	}
 
 	show_boot_progress (8);
 
-#ifdef CONFIG_SILENT_CONSOLE
-	if (images.os.os == IH_OS_LINUX)
-		fixup_silent_linux();
+	lmb_reserve(&lmb, load_start, (load_end - load_start));
+
+#if defined(CONFIG_ZIMAGE_BOOT)
+after_header_check:
+	os = hdr->ih_os;
 #endif
 
-	boot_fn = boot_os[images.os.os];
+	switch (os) {
+	default:			/* handled by (original) Linux case */
+	case IH_OS_LINUX:
+#ifdef CONFIG_SILENT_CONSOLE
+	    fixup_silent_linux();
+#endif
+	    do_bootm_linux (flag, argc, argv, &images);
+	    break;
+#ifdef CONFIG_BOOTM_NETBSD
+	case IH_OS_NETBSD:
+	    do_bootm_netbsd (flag, argc, argv, &images);
+	    break;
+#endif
+#ifdef CONFIG_LYNXKDI
+	case IH_OS_LYNXOS:
+	    do_bootm_lynxkdi (flag, argc, argv, &images);
+	    break;
+#endif
+#ifdef CONFIG_BOOTM_RTEMS
+	case IH_OS_RTEMS:
+	    do_bootm_rtems (flag, argc, argv, &images);
+	    break;
+#endif
+/*
+#if defined(CONFIG_CMD_ELF)
+	case IH_OS_VXWORKS:
+	    do_bootm_vxworks (cmdtp, flag, argc, argv, &images);
+	    break;
 
-	if (boot_fn == NULL) {
-		if (iflag)
-			enable_interrupts();
-		printf ("ERROR: booting os '%s' (%d) is not supported\n",
-			genimg_get_os_name(images.os.os), images.os.os);
-		show_boot_progress (-8);
-		return 1;
+	case IH_OS_QNX:
+	    do_bootm_qnxelf (cmdtp, flag, argc, argv, &images);
+	    break;
+#endif
+*/
+#ifdef CONFIG_ARTOS
+	case IH_OS_ARTOS:
+	    do_bootm_artos (cmdtp, flag, argc, argv, &images);
+	    break;
+#endif
 	}
-
-	arch_preboot_os();
-
-	boot_fn(0, argc, argv, &images);
 
 	show_boot_progress (-9);
 #ifdef DEBUG
 	puts ("\n## Control returned to monitor - resetting...\n");
-#endif
 	do_reset (cmdtp, flag, argc, argv);
+#endif
+	if (iflag)
+		enable_interrupts();
 
 	return 1;
 }
