@@ -93,7 +93,7 @@ static void announce_and_cleanup(void)
 	cleanup_before_linux();
 }
 
-void do_bootm_linux(int flag, int argc, char *argv[],
+int do_bootm_linux(int flag, int argc, char *argv[],
 		     bootm_headers_t *images)
 {
 	ulong	initrd_start, initrd_end;
@@ -192,11 +192,11 @@ void do_bootm_linux(int flag, int argc, char *argv[],
 
 	theKernel (0, machid, bd->bi_boot_params);
 	/* does not return */
-	return;
+	return 0;
 
 error:
 	//do_reset (cmdtp, flag, argc, argv);
-	return;
+	return -1;
 }
 
 #if defined(CONFIG_OF_LIBFDT)
