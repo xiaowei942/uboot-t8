@@ -430,7 +430,7 @@
 
 #if 1
 #define CONFIG_BOOTARGS		"console=ttySAC0,115200 mem=512M"
-#define CONFIG_BOOTCOMMAND	"nand read C0008000 600000 400000; nand read 30A00000 B00000 180000; bootm C0008000 30A00000"
+#define CONFIG_BOOTCOMMAND	"nand read 30008000 600000 500000; nand read 30A00000 B00000 180000; bootm 30008000 30A00000"
 #else
 #define CONFIG_BOOTCOMMAND	"tftp 30000000 uImage; bootm 30000000"
 #define CONFIG_BOOTARGS		"root=/dev/nfs nfsroot=10.0.1.119:/opt/tftpboot/nfsroot rw noinitrd init=/linuxrc ip=10.0.1.111:10.0.1.119:10.0.1.119:255.255.255.0:avantech:eth0:off console=ttySAC0,115200"

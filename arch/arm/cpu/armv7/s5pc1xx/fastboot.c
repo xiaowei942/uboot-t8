@@ -109,7 +109,7 @@ unsigned int ptable_default_size = sizeof(ptable_default);
 
 
 
-#define FASTBOOT_DEBUG
+//#define FASTBOOT_DEBUG
 #undef FASTBOOT_DEBUG
 
 #ifdef FASTBOOT_DEBUG
@@ -122,7 +122,7 @@ unsigned int ptable_default_size = sizeof(ptable_default);
 	#define DBG2(fmt, args...) do { } while (0)
 #endif
 
-//#undef USB_OTG_DEBUG_SETUP
+#undef USB_OTG_DEBUG_SETUP
 //#define USB_OTG_DEBUG_SETUP
 
 #ifdef USB_OTG_DEBUG_SETUP

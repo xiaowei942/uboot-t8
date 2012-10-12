@@ -106,6 +106,7 @@ int do_bootm_linux(int flag, int argc, char *argv[],
 
 #ifdef CONFIG_CMDLINE_TAG
 	char *commandline = getenv ("bootargs");
+	printf ("[petworm] bootargs is \"%s\".\n", commandline);
 #endif
 
 	/* find kernel entry point */
