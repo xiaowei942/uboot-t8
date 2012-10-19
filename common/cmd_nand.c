@@ -490,8 +490,12 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 		 * erases -- easy to do accidentally, e.g. with a misspelled
 		 * variable name.
 		 */
+#if 0	// Modified by Santiage 20121019:
 		if (argc != o + args)
+		{
 			goto usage;
+		}
+#endif
 
 		printf("\nNAND %s: ", cmd);
 		/* skip first two or three arguments, look for offset and size */
