@@ -238,7 +238,7 @@ int board_late_init (void)
 #ifdef CONFIG_DISPLAY_BOARDINFO
 int checkboard(void)
 {
-	printf("\nBoard:   FriendlyLEG-TINY210\n");
+	printf("\nBoard:   ZZRD-SMDKV210\n");
 	return (0);
 }
 #endif

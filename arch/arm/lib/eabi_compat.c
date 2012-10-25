@@ -13,12 +13,6 @@
 
 int raise (int signum)
 {
-	printf("raise: Signal # %d caught\n", signum);
-	printf("\n");
-        printf("\n");
-	printf("########################################################\n");
-	printf("#   Modified by GJGJ  http://blog.csdn.net/liukun321   #\n");
-	printf("########################################################\n");
 	return 0;
 }
 
