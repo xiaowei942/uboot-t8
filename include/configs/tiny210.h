@@ -467,7 +467,8 @@
 #define BL1_SIZE                        (8 << 10) /*8 K reserved for BL1*/
 #define CONFIG_ENV_OFFSET               0x80000
 #define CFG_NAND_HWECC
+/*
 #define CONFIG_NAND_BL1_8BIT_ECC
 #define CONFIG_8BIT_HW_ECC_SLC      1
-
+*/
 #endif	/* __CONFIG_H */

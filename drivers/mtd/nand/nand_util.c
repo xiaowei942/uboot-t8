@@ -527,6 +527,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 		return -EINVAL;
 	}
 
+#if 0 //Comment for yaffs2 image writting
 	if (!need_skip && !(flags & WITH_DROP_FFS)) {
 		rval = nand_write (nand, offset, length, buffer);
 		if (rval == 0)
@@ -537,6 +538,7 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 			offset, rval);
 		return rval;
 	}
+#endif
 
 	while (left_to_write > 0) {
 		size_t block_offset = offset & (nand->erasesize - 1);
@@ -576,7 +578,8 @@ int nand_write_skip_bad(nand_info_t *nand, loff_t offset, size_t *length,
 				ops.oobbuf = ops.datbuf + pagesize;
 
 				rval = nand->write_oob(nand, offset, &ops);
-				if (!rval)
+				//if (!rval) //Comment for yaffs2 image writting
+				if (rval)
 					break;
 
 				offset += pagesize;
