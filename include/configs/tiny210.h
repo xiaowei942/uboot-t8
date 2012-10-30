@@ -471,4 +471,21 @@
 #define CONFIG_NAND_BL1_8BIT_ECC
 #define CONFIG_8BIT_HW_ECC_SLC      1
 */
+
+/*------------------- LCD setting --------------------*/
+#define CONFIG_VGA_AS_SINGLE_DEVICE
+#define CFG_LCD_FBUFFER				(0x23200000)//(0x48000000)
+
+#define CONFIG_VIDEO_TRULY
+#define CONFIG_LCD_WIDTH 480
+#define CONFIG_LCD_HEIGHT 640
+#define BPP 16
+
+#define VIDEO_MEM_SIZE CONFIG_LCD_WIDTH*CONFIG_LCD_HEIGHT*BPP/8
+#define CONFIG_VIDEO_LOGO 1
+#define CONFIG_VIDEO 1
+#define CONFIG_CFB_CONSOLE 1
+/*----------------- LCD setting end -----------------*/
+
+#define DEBUG
 #endif	/* __CONFIG_H */

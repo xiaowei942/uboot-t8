@@ -424,6 +424,11 @@ static const int video_font_draw_table32[16][4] = {
 	{0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff}
 };
 
+static inline void delay(unsigned long loops)
+{
+	__asm__ volatile ("1:\n" "subs %0, %1, #1\n" "bne 1b":"=r" (loops):"0"(loops));
+}
+
 
 static void video_drawchars(int xx, int yy, unsigned char *s, int count)
 {
@@ -1739,6 +1744,46 @@ static int video_init(void)
 	video_console_address = video_fb_address;
 #endif
 
+	volatile int i,j;
+	unsigned int *buf = video_fb_address;
+/* // Clear the screen
+	for(i=0;i<480*640*2/4;i++)
+		buf[i] = 0;
+*/
+/*	delay(30000000000);
+	for(i=0;i<640*480/2;i++){
+		buf[i] = 0x1f<<11 | 0x1f<<27;
+	}
+	delay(15000000000);
+	for(i=0;i<640*480/2;i++){
+		buf[i] = 0x3f<<5 | 0x3f<<21;
+	}
+	delay(15000000000);
+	for(i=0;i<640*480/2;i++){
+		buf[i] = 0x1f<<0 | 0x1f<<0;
+	}
+*/
+/* // Drawing the lines
+	for(i=0;i<640;i++)
+	{
+		for(j=0;j<80;j++)
+		{
+			buf[j] = 0x1f<<11 | 0x1f<<27;
+		}
+		delay(10000000);
+		for(j=80;j<160;j++)
+		{
+			buf[j] = 0x3f<<5 | 0x3f<<210;
+		}
+		delay(10000000);
+		for(j=160;j<240;j++)
+		{
+			buf[j] = 0x1f<<0 | 0x1f<<0;
+		}
+		buf+=240;
+		delay(10000000);
+	}
+*/
 	/* Initialize the console */
 	console_col = 0;
 	console_row = 0;
@@ -1770,7 +1815,7 @@ int drv_video_init(void)
 
 	/* Init video chip - returns with framebuffer cleared */
 	skip_dev_init = (video_init() == -1);
-
+#if 0
 #if !defined(CONFIG_VGA_AS_SINGLE_DEVICE)
 	debug("KBD: Keyboard init ...\n");
 	skip_dev_init |= (VIDEO_KBD_INIT_FCT == -1);
@@ -1798,7 +1843,7 @@ int drv_video_init(void)
 
 	if (stdio_register(&console_dev) != 0)
 		return 0;
-
+#endif
 	/* Return success */
 	return 1;
 }
