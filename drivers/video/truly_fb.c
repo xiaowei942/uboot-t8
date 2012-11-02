@@ -42,6 +42,8 @@ void tiny210_lcd_init(void)
 	u32 uFbAddr = CFG_LCD_FBUFFER;
 	u32* pBuffer = (u32*)uFbAddr;
 
+	Outp32(0xe0100204,0x700000); 	//CLK_SRC1-Clock Source Control Registers
+					//FIMD_SEL([23:20]--> 0111: SCLKEPLL)
 	Outp32(0xe0200120, 0x22222222);		//set GPF0 as LVD_HSYNC,VSYNC,VCLK,VDEN,VD[3:0]
 	Outp32(0xe0200128,0x0);			//set pull-up,down disable
 	Outp32(0xe0200140, 0x22222222);		//set GPF1 as VD[11:4]
@@ -57,21 +59,6 @@ void tiny210_lcd_init(void)
 	Outp32(0xe020016c,0xffffffff);		//set GPF2 drive strength max by WJ.KIM(09.07.17)
 	Outp32(0xe020018c,0x3ff);		//set GPF3 drive strength max by WJ.KIM(09.07.17)
 
-//////////  EDIT BY WEI  /////////////
-	Outp32(0xf8000004, 0x60);
-	/*
-	Outp32(0xf8000010,0x010802); 		//For VBPD:[0x16] VFPD:[0x15] VSPW:[not used]
-	Outp32(0xf8000014,0x052802); 		//For HBPD:[0x2d] HFPD:[0xD1] HSPW:[not used]
-	*/
-	Outp32(0xf8000010,0x010802); 		//For VBPD:[0x16] VFPD:[0x15] VSPW:[not used]
-	Outp32(0xf8000014,0x052802); 		//For HBPD:[0x2d] HFPD:[0xD1] HSPW:[not used]
-
-	Outp32(0xf8000170, 0x4c); 		//Disable dithering[bit 0];Set RGB Dither bit to 8-bit 
- 	Outp32(0xf8000018, 0x13f9df); 		//set LINEVAL[21:11]=640-1=11b01001111111;
-						//    HOZVAL [10: 0]=480-1=11b00111011111
-//////////  END OF EDIT  /////////////
-
-	Outp32(0xf8000000, 0x153);	//VIDCON0-Video Main Control 0 Register
 	Outp32(0xf8000130, 0x20);	//Set VIDINTCON0[5:0] to enable Window 0 FIFO Interrupt
 	Outp32(0xf8000020, 0x0);	//WINCON0-Window 0 Control Register
 	Outp32(0xf8000024, 0x0);	//WINCON1-Window 1 Control Register
@@ -107,7 +94,6 @@ void tiny210_lcd_init(void)
 	Outp32(0xf8000200, 0xffffff);	//Hue Control Registers
 	Outp32(0xf8000204, 0xffffff);	//VIDW0ALPHA1-Window 0 Alpha1 control Register
 	Outp32(0xf8000034, 0x0);	//SHODOWCON-Window Shadow Control Register
-	Outp32(0xf8000020, 0x8014);	//WINCON0-Window 0 Control Register
 					//set WINCON0[15:12]=0x8 for Half-Word swep enabled
 					//and double buffering and RGB source image
 	Outp32(0xf80000a0, uFbAddr + 0x00000000); 	//VIDW00ADD0B0-Specifies window 0’s 
@@ -127,34 +113,34 @@ void tiny210_lcd_init(void)
 	Outp32(0xf80020d0, uFbAddr + 0x00400800);	//VIDW00ADD1B2-Specifies window 0’s
 							//buffer end address register, buffer 2. 
 
-
 /////////////  EDIT BY WEI  /////////////
+
+	Outp32(0xf8000000, 0x153);	//VIDCON0-Video Main Control 0 Register
+	Outp32(0xf8000004, 0x60);
+
+	Outp32(0xf8000010,0x010802); 		//For VBPD:[0x01] VFPD:[0x08] VSPW:[0x02]
+	Outp32(0xf8000014,0x052802); 		//For HBPD:[0x05] HFPD:[0x28] HSPW:[0x02]
+
+	Outp32(0xf8000020, 0x8014);	//WINCON0-Window 0 Control Register
+	Outp32(0xf8000170, 0x4c); 	//Disable dithering[bit 0];Set RGB Dither bit to 8-bit 
+ 	Outp32(0xf8000018, 0x13f9df);	//set	LINEVAL[21:11]=640-1=11b01001111111;
+										//		HOZVAL [10: 0]=480-1=11b00111011111
+
 	Outp32(0xf8000100, 0x3c0);	//Virtual screen page width:480*2=0x3c0
 	Outp32(0xf8000040, 0x0);	//VIDOSD0A-Window 0 Position Control A Register
 	Outp32(0xf8000044, 0x1DF27F);	//VIDOSD0B-Window 0 Position Control B Register
-/////////////  END OF EDIT  /////////////
-
+										// 0x1df=479 0x27f=639
 	Outp32(0xf8000020, 0x8015);	//WINCON0-Window 0 Control Register
 	Outp32(0xf8000034, 0x1);	//SHODOWCON-Window Shadow Control Register
 	//Outp32(0xf8000000, 0x153);	//VIDCON0-Video Main Control 0 Register
+										//Select HCLK as source and 5 as devided value
 	Outp32(0xf80001a4, 0x3);	//TRIGCON-I80 / RGB Trigger Control Register
-	Outp32(0xe0107008,0x2); 	/* DISPLAY_CONTROL-Display path selection
-					   DISPLAY_PATH_SEL([1:0]-->10:RGB=FIMD I80=FIMD ITU=FIMD)*/
-	Outp32(0xe0100204,0x700000); 	//CLK_SRC1-Clock Source Control Registers
-					//FIMD_SEL([23:20]--> 0111: SCLKEPLL)
-	unsigned long temp = *(volatile unsigned long *)0xe0100280;
-	Outp32(0xe0100280,temp|1<<5);
-}
+	Outp32(0xe0107008,0x2); 	/* 
+						DISPLAY_CONTROL-Display path selection
+						DISPLAY_PATH_SEL([1:0]-->10:RGB=FIMD I80=FIMD ITU=FIMD)
+					*/
 
-void print_registers(const int from,const int to)
-{
-	int i=0;
-	int *p = (volatile unsigned long *)from;
-	for(i=0;i<=(to-from)/4;i++)
-	{
-		printf("0x%08lx: 0x%08lx\n",p+i,*(p+i));		
-	}
-printf("CLK_SRC0: 0x%08lx\n",*(volatile unsigned long *)0xE0100200);
+/////////////  END OF EDIT  /////////////
 
 }
 
@@ -177,6 +163,8 @@ void backlight_on(void)
 
 void *video_hw_init (void)
 {
+	backlight_on();
+
 	GraphicDevice *pGD = (GraphicDevice *)&smi;
 	int bits_per_pixel = BPP;
 
@@ -184,7 +172,6 @@ void *video_hw_init (void)
 
 	tiny210_lcd_init();
 
-	backlight_on();
 	pGD->winSizeX = LCD_WIDTH; 
 	pGD->winSizeY = LCD_HEIGHT;
 	pGD->plnSizeX = LCD_WIDTH;
@@ -223,7 +210,6 @@ void *video_hw_init (void)
 	/* Clear video memory */
 	memset((void *)pGD->frameAdrs, 0x0, pGD->memSize);
 
-	//print_registers(0xf8000000,0xf8000300);
 	return ((void*)&smi);
  }
 

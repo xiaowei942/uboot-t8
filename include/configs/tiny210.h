@@ -474,7 +474,8 @@
 
 /*------------------- LCD setting --------------------*/
 #define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CFG_LCD_FBUFFER				(0x23200000)//(0x48000000)
+#define CFG_LCD_FBUFFER				(0x2943a000)//(0x48000000)
+#define CFG_LCD_FBUFFER_BK				(0x2983a000)//(0x48000000)
 
 #define CONFIG_VIDEO_TRULY
 #define CONFIG_LCD_WIDTH 480

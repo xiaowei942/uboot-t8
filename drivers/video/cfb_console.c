@@ -101,6 +101,7 @@
 #include <common.h>
 #include <version.h>
 #include <malloc.h>
+#include <linux/string.h>
 
 /*
  * Console device defines with SMI graphic
@@ -1743,6 +1744,9 @@ static int video_init(void)
 #else
 	video_console_address = video_fb_address;
 #endif
+	//unsigned char *start_logo = malloc(1024*4);
+	read_logo_bin(CFG_LCD_FBUFFER_BK,0x100000,0x500000);
+	memcpy((void *)video_fb_address,(void *)CFG_LCD_FBUFFER_BK,VIDEO_SIZE);
 
 	volatile int i,j;
 	unsigned int *buf = video_fb_address;

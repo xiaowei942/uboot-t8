@@ -443,6 +443,7 @@ static char *failed = "*** failed ***\n";
 
 void board_init_r(gd_t *id, ulong dest_addr)
 {
+	printf("Inot %s\n",__FUNCTION__);
 	char *s;
 	bd_t *bd;
 	ulong malloc_start;
