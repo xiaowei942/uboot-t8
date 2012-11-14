@@ -115,7 +115,7 @@ void tiny210_lcd_init(void)
 
 /////////////  EDIT BY WEI  /////////////
 
-	Outp32(0xf8000000, 0x153);	//VIDCON0-Video Main Control 0 Register
+	Outp32(0xf8000000, 0x97);//153);	//VIDCON0-Video Main Control 0 Register
 	Outp32(0xf8000004, 0x60);
 
 	Outp32(0xf8000010,0x010802); 		//For VBPD:[0x01] VFPD:[0x08] VSPW:[0x02]
@@ -163,7 +163,6 @@ void backlight_on(void)
 
 void *video_hw_init (void)
 {
-	backlight_on();
 
 	GraphicDevice *pGD = (GraphicDevice *)&smi;
 	int bits_per_pixel = BPP;

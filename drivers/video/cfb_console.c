@@ -1745,8 +1745,10 @@ static int video_init(void)
 	video_console_address = video_fb_address;
 #endif
 	//unsigned char *start_logo = malloc(1024*4);
-	read_logo_bin(CFG_LCD_FBUFFER_BK,0x100000,0x500000);
+	 read_logo_bin(CFG_LCD_FBUFFER_BK,0x100000,0x100000);
 	memcpy((void *)video_fb_address,(void *)CFG_LCD_FBUFFER_BK,VIDEO_SIZE);
+
+	backlight_on();
 
 	volatile int i,j;
 	unsigned int *buf = video_fb_address;

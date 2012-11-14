@@ -322,6 +322,9 @@ void main_loop (void)
 	hush_init_var ();
 #endif
 
+
+
+
 #ifdef CONFIG_FASTBOOT
     if (fastboot_preboot())
         run_command("fastboot", 0);
@@ -419,6 +422,7 @@ void main_loop (void)
 	for (;;);
 #else
 	for (;;) {
+	
 #ifdef CONFIG_BOOT_RETRY_TIME
 		if (rc >= 0) {
 			/* Saw enough of a valid command to

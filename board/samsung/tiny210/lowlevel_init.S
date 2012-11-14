@@ -89,8 +89,40 @@ lowlevel_init:
 	ldr	r2, =(0x3<<8)
 	bic	r1, r1, r2
 	str	r1, [r0, #GPJ4PUD_OFFSET]
+	
+	/* Close Lcd Backlight */
+/*	
+	ldr 	r0, =ELFIN_GPIO_BASE
+	ldr 	r1, [r0, #GPD0CON_OFFSET]
+	bic 	r1, r1, #(0xF<<4)
+	ldr 	r2, =(0x1<<4)
+	orr 	r1, r1, r2
+	str 	r1, [r0, #GPD0CON_OFFSET]
+
+	ldr 	r0, =ELFIN_GPIO_BASE
+	ldr 	r1, [r0, #GPD0DAT_OFFSET]
+	bic 	r1, r1, #(0x1<<4)
+	ldr 	r2, =0
+	orr 	r1, r1, r2
+	str 	r1, [r0, #GPD0DAT_OFFSET]
 
 
+	ldr 	r0, =ELFIN_GPIO_BASE
+	ldr 	r1, [r0, #GPH1CON_OFFSET]
+	bic 	r1, r1, #(0xF<<8)
+	ldr 	r2, =(0x1<<8)
+	orr 	r1, r1, r2
+	str 	r1, [r0, #GPD0CON_OFFSET]
+
+	ldr 	r0, =ELFIN_GPIO_BASE
+	ldr 	r1, [r0, #GPD0DAT_OFFSET]
+	bic 	r1, r1, #(0x1<<8)
+	ldr 	r2, =0
+	orr 	r1, r1, r2
+	str 	r1, [r0, #GPD0DAT_OFFSET]
+*/
+	/* End Of Close Lcd Backlight */
+	
 	/* CS0 - 16bit sram, enable nBE, Byte base address */
 	ldr	r0, =ELFIN_SROM_BASE	/* 0xE8000000 */
 	mov	r1, #0x1

@@ -124,7 +124,7 @@
 //#undef CONFIG_CMD_NET
 //#undef CONFIG_CMD_NFS
 #endif
-#define CONFIG_BOOTDELAY		3
+#define CONFIG_BOOTDELAY		0
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
 /* Miscellaneous configurable options */
@@ -483,7 +483,7 @@
 #define BPP 16
 
 #define VIDEO_MEM_SIZE CONFIG_LCD_WIDTH*CONFIG_LCD_HEIGHT*BPP/8
-#define CONFIG_VIDEO_LOGO 1
+/* #define CONFIG_VIDEO_LOGO 1 */
 #define CONFIG_VIDEO 1
 #define CONFIG_CFB_CONSOLE 1
 /*----------------- LCD setting end -----------------*/
