@@ -97,7 +97,7 @@
 
 /* select serial console configuration */
 #define CONFIG_SERIAL_MULTI		1
-#define CONFIG_SERIAL0			1	/* use SERIAL 0 */
+#define CONFIG_SERIAL2			1	/* use SERIAL 2 */
 #define CONFIG_BAUDRATE			115200
 #define S5PC210_DEFAULT_UART_OFFSET	0x020000
 
@@ -429,11 +429,11 @@
 #define CONFIG_GATEWAYIP	10.0.1.1
 
 #if 1
-#define CONFIG_BOOTARGS		"console=ttySAC0,115200 mem=512M"
+#define CONFIG_BOOTARGS		"console=ttySAC2,115200 mem=512M"
 #define CONFIG_BOOTCOMMAND	"nand read 30008000 600000 500000; nand read 30A00000 B00000 180000; bootm 30008000 30A00000"
 #else
 #define CONFIG_BOOTCOMMAND	"tftp 30000000 uImage; bootm 30000000"
-#define CONFIG_BOOTARGS		"root=/dev/nfs nfsroot=10.0.1.119:/opt/tftpboot/nfsroot rw noinitrd init=/linuxrc ip=10.0.1.111:10.0.1.119:10.0.1.119:255.255.255.0:avantech:eth0:off console=ttySAC0,115200"
+#define CONFIG_BOOTARGS		"root=/dev/nfs nfsroot=10.0.1.119:/opt/tftpboot/nfsroot rw noinitrd init=/linuxrc ip=10.0.1.111:10.0.1.119:10.0.1.119:255.255.255.0:avantech:eth0:off console=ttySAC2,115200"
 #endif
 
 /*   For nand driver   */
