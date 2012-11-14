@@ -163,7 +163,7 @@ int board_init(void)
 	/***Modified by lk ***/
 
 	//smc9115_pre_init();
-        pwm_pre_init();
+//        pwm_pre_init();
 
 #ifdef CONFIG_DRIVER_DM9000
 	dm9000_pre_init();

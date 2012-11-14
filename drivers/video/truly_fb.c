@@ -149,11 +149,13 @@ void backlight_on(void)
 	printf("Backlight on\n");
 	Outp32(0xE02000A0, 0x00000010);		//set GPD0_1 as Output
 	Outp32(0xe02000a4,0x2);			//set output value as 1
+}
 
+void power_enable(void)
+{
 	Outp32(0xE0200c20,0x0);
 	Outp32(0xE0200c20,0x00000100);
 	Outp32(0xe0200c24,(0x1<<2));
-
 }
 
 /*******************************************************************************
@@ -170,6 +172,7 @@ void *video_hw_init (void)
 	printf("Video: ");
 
 	tiny210_lcd_init();
+	power_enable();
 
 	pGD->winSizeX = LCD_WIDTH; 
 	pGD->winSizeY = LCD_HEIGHT;
