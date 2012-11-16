@@ -89,7 +89,7 @@ void tiny210_lcd_init(void)
 	Outp32(0xf8000224, 0x0);	//VIDW0ALPHA1-Window 4 Alpha1 Control Register
 	Outp32(0xf8000260, 0x1);	//BLENDCON-Blending Equation Control Register
 					//set to 8-bit alpha value
-	Outp32(0xf8000048, 0x100200);	//VIDOSD0C-Window 0 Position Control C Register
+	Outp32(0xf8000048, 0x4b000);	//VIDOSD0C-Window 0 Position Control C Register
 					//VIDOSD0C-[23:0] Specifies the Window Size 
 	Outp32(0xf8000200, 0xffffff);	//Hue Control Registers
 	Outp32(0xf8000204, 0xffffff);	//VIDW0ALPHA1-Window 0 Alpha1 control Register
@@ -115,25 +115,26 @@ void tiny210_lcd_init(void)
 
 /////////////  EDIT BY WEI  /////////////
 
-	Outp32(0xf8000000, 0x97);//153);	//VIDCON0-Video Main Control 0 Register
+	Outp32(0xf8000000, 0xd7);//153);	//VIDCON0-Video Main Control 0 Register
 	Outp32(0xf8000004, 0x60);
 
-	Outp32(0xf8000010,0x010802); 		//For VBPD:[0x01] VFPD:[0x08] VSPW:[0x02]
-	Outp32(0xf8000014,0x052802); 		//For HBPD:[0x05] HFPD:[0x28] HSPW:[0x02]
+	Outp32(0xf8000010,0x060400); 		//For VBPD:[0x01] VFPD:[0x08] VSPW:[0x02]
+	Outp32(0xf8000014,0xc7702); 		//For HBPD:[0x05] HFPD:[0x28] HSPW:[0x02]
 
-	Outp32(0xf8000020, 0x8014);	//WINCON0-Window 0 Control Register
 	Outp32(0xf8000170, 0x4c); 	//Disable dithering[bit 0];Set RGB Dither bit to 8-bit 
  	Outp32(0xf8000018, 0x13f9df);	//set	LINEVAL[21:11]=640-1=11b01001111111;
 										//		HOZVAL [10: 0]=480-1=11b00111011111
 
 	Outp32(0xf8000100, 0x3c0);	//Virtual screen page width:480*2=0x3c0
 	Outp32(0xf8000040, 0x0);	//VIDOSD0A-Window 0 Position Control A Register
-	Outp32(0xf8000044, 0x1DF27F);	//VIDOSD0B-Window 0 Position Control B Register
+	Outp32(0xf8000044, 0xEFA7F);	//VIDOSD0B-Window 0 Position Control B Register
 										// 0x1df=479 0x27f=639
-	Outp32(0xf8000020, 0x8015);	//WINCON0-Window 0 Control Register
+	Outp32(0xf8000020, 0x10015);	//WINCON0-Window 0 Control Register
 	Outp32(0xf8000034, 0x1);	//SHODOWCON-Window Shadow Control Register
 	//Outp32(0xf8000000, 0x153);	//VIDCON0-Video Main Control 0 Register
 										//Select HCLK as source and 5 as devided value
+	Outp32(0xf8000134, 0x9021);
+	Outp32(0xf8000134, 0x0);
 	Outp32(0xf80001a4, 0x3);	//TRIGCON-I80 / RGB Trigger Control Register
 	Outp32(0xe0107008,0x2); 	/* 
 						DISPLAY_CONTROL-Display path selection
